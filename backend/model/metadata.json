@@ -1,0 +1,93 @@
+{
+  "model_name": "regresion_logistica",
+  "version": "1.2.0",
+  "target_mapping": {
+    "0": "maligno",
+    "1": "benigno"
+  },
+  "positive_class": "benigno (1)",
+  "feature_names": [
+    "mean radius",
+    "mean texture",
+    "mean perimeter",
+    "mean area",
+    "mean smoothness",
+    "mean compactness",
+    "mean concavity",
+    "mean concave points",
+    "mean symmetry",
+    "mean fractal dimension",
+    "radius error",
+    "texture error",
+    "perimeter error",
+    "area error",
+    "smoothness error",
+    "compactness error",
+    "concavity error",
+    "concave points error",
+    "symmetry error",
+    "fractal dimension error",
+    "worst radius",
+    "worst texture",
+    "worst perimeter",
+    "worst area",
+    "worst smoothness",
+    "worst compactness",
+    "worst concavity",
+    "worst concave points",
+    "worst symmetry",
+    "worst fractal dimension"
+  ],
+  "metrics": {
+    "accuracy": 0.9824561403508771,
+    "precision": 0.9861111111111112,
+    "recall": 0.9861111111111112,
+    "f1": 0.9861111111111112,
+    "roc_auc": 0.996031746031746,
+    "test_samples": 114
+  },
+  "confusion_matrix_labels": [
+    "maligno (0)",
+    "benigno (1)"
+  ],
+  "confusion_matrix": [
+    [
+      41,
+      1
+    ],
+    [
+      1,
+      71
+    ]
+  ],
+  "decision_rule": "predict; umbral predeterminado 0.50 para clase 1; sin ajuste de umbral",
+  "selection": {
+    "criterion": "mean_test_f1",
+    "folds": 5,
+    "mean": 0.9860559194087166,
+    "std": 0.004286746996914233
+  },
+  "training": {
+    "random_state": 42,
+    "train_samples": 455,
+    "test_samples": 114,
+    "created_at_utc": "2026-11-02T02:52:40.520587+00:00",
+    "git_parent_commit": "451ecf340ddd0da98f5f315234802c5cb3b3e812",
+    "source_sha256": "84b71041a8bb125b36455cb5364f1b34799e8198be6e64e8e20261e65e8c61fd",
+    "dataset_sha256": "9e06ac25868bca5de98aa757b0112b94096ff7b3d3fc579ade591c3fa58724b5",
+    "model_sha256": "f7ce8136c5ccc012cce5471f54957033316514f0a514d961a85a6339b6bf99c1",
+    "best_params": {
+      "modelo__C": 0.1,
+      "modelo__class_weight": null,
+      "modelo__solver": "liblinear"
+    },
+    "python": "3.12.14",
+    "packages": {
+      "scikit-learn": "1.8.0",
+      "pandas": "2.2.3",
+      "joblib": "1.4.2",
+      "mlflow": "3.0.1"
+    },
+    "mlflow_run_id": "813d7c9b85614044bf7d75dd2581c632"
+  }
+}

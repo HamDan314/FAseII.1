@@ -1,0 +1,20 @@
+{
+  "run_id": "813d7c9b85614044bf7d75dd2581c632",
+  "status": "FINISHED",
+  "params": {
+    "ganador_cv": "regresion_logistica",
+    "decision_rule": "predict; umbral predeterminado 0.50 para clase 1; sin ajuste de umbral",
+    "random_state": "42"
+  },
+  "metrics": {
+    "accuracy_test": 0.9824561403508771,
+    "roc_auc_test": 0.996031746031746,
+    "recall_test": 0.9861111111111112,
+    "f1_test": 0.9861111111111112,
+    "precision_test": 0.9861111111111112
+  },
+  "tags": {},
+  "source_sha256": "84b71041a8bb125b36455cb5364f1b34799e8198be6e64e8e20261e65e8c61fd",
+  "dataset_sha256": "9e06ac25868bca5de98aa757b0112b94096ff7b3d3fc579ade591c3fa58724b5",
+  "model_sha256": "f7ce8136c5ccc012cce5471f54957033316514f0a514d961a85a6339b6bf99c1"
+}

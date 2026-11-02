@@ -15,18 +15,23 @@ Usuario → Nginx (8080) → proxy `/api` → FastAPI (8000) → pipeline de imp
 - `docs/`: manuales, pruebas, interpretación y vínculo con el chatbot.
 - `.github/workflows/ci.yml`: pruebas, construcción y comprobación de integración.
 
+## Inicio en Windows
+
+Extrae el proyecto completo, abre Docker Desktop con contenedores Linux y ejecuta `INICIAR_DOCKER.bat`. El archivo construye las imágenes, espera a que estén saludables, ejecuta nueve pruebas y comprueba una predicción a través del proxy Nginx. Solo indica éxito si todos esos pasos terminan correctamente. Requiere Docker Compose v2 compatible con `--wait`. Si los puertos 8000 u 8080 están ocupados, configura otros en `.env` tomando `.env.example` como referencia.
+
 ## Ejecución local
 
 Requiere Git, Docker Engine y Docker Compose v2.
 
 ```bash
-git clone https://github.com/HamDan314/cancermm.git
-cd cancermm
+git clone https://github.com/HamDan314/FAseII.1.git
+cd FAseII.1
 docker compose build
 docker compose up -d
 docker compose ps
 curl --fail http://localhost:8080/api/health
 docker compose exec -T backend python -m pytest -q
+docker compose exec -T backend python tests/comprobar_integracion.py
 ```
 
 Frontend: http://localhost:8080. Swagger: http://localhost:8000/docs. Para detener: `docker compose down`.
@@ -63,3 +68,7 @@ La codificación es **0 maligno y 1 benigno**. Precision, recall y F1 se calcula
 Los Word y PDF de la raíz conservan la entrega histórica. Para la revisión actual prevalecen los archivos Markdown y metadatos versionados; esos documentos históricos no se han reeditado.
 
 Las pruebas de API no demuestran validez clínica. La construcción de una imagen tampoco demuestra una ejecución local o un despliegue en nube: conservar las salidas reales del entorno utilizado. No se ha implementado aquí el chatbot generativo.
+
+## Autenticación
+
+El prototipo no requiere login ni tokens. Consulta [autenticación y flujo de solicitudes](docs/AUTENTICACION.md) para conocer el comportamiento del cliente, Nginx, FastAPI y las credenciales de despliegue.

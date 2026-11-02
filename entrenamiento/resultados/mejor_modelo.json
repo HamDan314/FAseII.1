@@ -1,0 +1,18 @@
+{
+  "modelo": "regresion_logistica",
+  "modelo__C": 0.1,
+  "modelo__class_weight": null,
+  "modelo__solver": "liblinear",
+  "tiempo_entrenamiento_seg": 0.6064049890001115,
+  "mejor_f1_cv": 0.9860559194087166,
+  "f1_cv_desv": 0.004286746996914233,
+  "modelo__max_depth": null,
+  "modelo__min_samples_split": null,
+  "modelo__n_estimators": null,
+  "accuracy_test": 0.9824561403508771,
+  "precision_test": 0.9861111111111112,
+  "recall_test": 0.9861111111111112,
+  "f1_test": 0.9861111111111112,
+  "roc_auc_test": 0.996031746031746,
+  "criterio_seleccion": "mayor F1 promedio en validación cruzada de entrenamiento; positivo=benigno"
+}

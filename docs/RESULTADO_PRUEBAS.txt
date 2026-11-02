@@ -1,0 +1,19 @@
+Revisión Fase II versión 1.2.0
+Fecha local: 2026-11-01
+Comando desde backend: python -m pytest -q
+.........                                                                [100%]
+=============================== warnings summary ===============================
+../../../../tmp/cancermm-venv/lib/python3.12/site-packages/starlette/testclient.py:37
+  /tmp/cancermm-venv/lib/python3.12/site-packages/starlette/testclient.py:37: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_api.py: 64 warnings
+  /tmp/cancermm-venv/lib/python3.12/site-packages/joblib/numpy_pickle.py:188: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+  As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+    array.shape = self.shape
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+9 passed, 65 warnings in 1.24s
+
+Entrenamiento reproducido con cinco pliegues y exportación conjunta de modelo y metadata.
+Docker no está disponible localmente; verificar el workflow de CI para construcción e integración.

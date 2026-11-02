@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+      - run: docker build -t cancer-api:test .
+      - run: docker build -t cancer-frontend:test ../frontend
+      - name: Integración con Docker Compose
+        working-directory: .
+        run: |
+          docker compose up -d --build --wait --wait-timeout 120
+          curl --fail http://localhost:8080/api/health
+          docker compose exec -T backend python -m pytest -q
+          docker compose exec -T backend python tests/comprobar_integracion.py
+      - name: Detener servicios
+        if: always()
+        working-directory: .
+        run: docker compose down
