@@ -1,82 +1,91 @@
-# Manual de despliegue en la nube
+# Manual de despliegue del clasificador de tumores
 
-## 1. Objetivo
+Clasificador de tumores · Fase II · Modelo 1.2.0
+Actualización del 1 de noviembre de 2026
 
-Publicar el frontend y el backend como servicios portables, reproducibles y escalables.
+Este manual permite reproducir la ejecución del frontend Nginx y la API FastAPI mediante Docker Compose y trasladar el mismo proyecto a una máquina virtual en nube. La ejecución local quedó comprobada con contenedores saludables, nueve pruebas aprobadas y una predicción desde el navegador. El despliegue en nube se describe como procedimiento; no se acredita una publicación real en nube.
 
-## 2. Estrategia recomendada
+## Arquitectura y requisitos
 
-Se recomienda un servicio de contenedores administrado, por ejemplo Google Cloud Run, Azure Container Apps o AWS App Runner. Esta estrategia evita administrar servidores, permite escalado automático y conserva la misma imagen validada localmente.
+El navegador solicita /api/predict al frontend. Nginx elimina el prefijo /api/ y reenvía la solicitud a backend:8000/predict. FastAPI valida 30 características y ejecuta el pipeline de imputación, escalado y regresión logística versionado como 1.2.0.
 
-## 3. Construcción y publicación de imágenes
+| Elemento | Configuración |
 
-```bash
-docker build -t hamdan314/cancer-api:1.0.0 ./backend
-docker build -t hamdan314/cancer-frontend:1.0.0 ./frontend
-docker login
-docker push hamdan314/cancer-api:1.0.0
-docker push hamdan314/cancer-frontend:1.0.0
-```
+| --- | --- |
 
-## 4. Opción A: servicios separados en Cloud Run
+| Repositorio | https://github.com/HamDan314/FAseII.1 |
 
-```bash
-gcloud auth login
-gcloud config set project ID_PROYECTO
-gcloud run deploy cancer-api   --image docker.io/hamdan314/cancer-api:1.0.0   --platform managed   --region us-central1   --allow-unauthenticated   --port 8000   --memory 1Gi   --cpu 1
-```
+| Servicios | backend y frontend |
 
-Registrar la URL pública generada, por ejemplo `https://cancer-api-xxxxx.run.app`.
+| Puertos predeterminados | API 8000 y web 8080 |
 
-## 5. Configuración del frontend en servicios separados
+| Requisitos locales | Docker Desktop con contenedores Linux y Compose v2 con --wait |
 
-Si el frontend y el backend se publican como servicios separados, sustituir temporalmente en `frontend/app.js`:
+| Archivos | backend/Dockerfile, frontend/Dockerfile y docker-compose.yml |
 
-```javascript
-const API_URL = "https://URL_PUBLICA_DEL_BACKEND";
-```
+## Ejecución local en Windows
 
-Reconstruir, publicar y desplegar:
+Descargar el ZIP de main y descomprimirlo por completo. Abrir Docker Desktop y ejecutar INICIAR_DOCKER.bat. El archivo construye las imágenes, espera el estado saludable, ejecuta pytest y comprueba la integración. No es necesario volver a entrenar el modelo.
 
-```bash
-docker build -t hamdan314/cancer-frontend:1.0.1 ./frontend
-docker push hamdan314/cancer-frontend:1.0.1
-gcloud run deploy cancer-frontend   --image docker.io/hamdan314/cancer-frontend:1.0.1   --platform managed   --region us-central1   --allow-unauthenticated   --port 80
-```
+http://localhost:8080
+http://localhost:8000/docs
 
-La configuración incluida está optimizada para Docker Compose: el navegador llama a `/api` y Nginx reenvía la solicitud al servicio `backend`. Esto evita URLs fijas y problemas de CORS. Para una plataforma que permita desplegar el archivo Compose completo, no se modifica el código.
+Si existe un contenedor de una ejecución anterior con el mismo nombre, eliminar únicamente los contenedores anteriores de este proyecto y volver a ejecutar el archivo BAT. El comando detiene y elimina esos dos contenedores.
 
-## 6. Alternativa PaaS
+docker rm -f cancer-api cancer-frontend
 
-Render o Railway pueden desplegar directamente desde GitHub. Para el backend:
+## Despliegue en una máquina virtual en nube
 
-- Root directory: `backend`
-- Environment: Docker
-- Health check: `/health`
-- Puerto: variable `PORT`
+Utilizar una VM Linux con Docker Engine, el complemento Docker Compose v2 y Git instalados. Como punto de partida para esta demostración, asignar 2 vCPU y 4 GB de RAM; ajustar tras observar el consumo. Disponer de acceso SSH, permisos para Docker y salida de red para descargar imágenes y dependencias.
 
-Para el frontend:
+1. Crear la VM en el proveedor elegido y conectarse mediante SSH. Restringir el acceso SSH a la IP del operador. Instalar Docker y Git según las instrucciones oficiales de la distribución y verificar docker version y docker compose version.
 
-- Root directory: `frontend`
-- Environment: Docker
-- Puerto interno: `80`
+2. Descargar una revisión reproducible del proyecto. El siguiente commit contiene la aplicación comprobada; los documentos de esta actualización se publican después de esa revisión.
 
-## 7. Seguridad y operación
+git clone https://github.com/HamDan314/FAseII.1.git
+cd FAseII.1
+git checkout d883fb7e5eaa43768caa57a5eae352c31743bd06
 
-- Restringir CORS a la URL real del frontend.
-- Usar HTTPS administrado por la plataforma.
-- Publicar imágenes con etiquetas semánticas, no únicamente `latest`.
-- Ejecutar el contenedor con usuario sin privilegios.
-- Configurar límites de CPU y memoria.
-- Registrar logs y alertas por errores 5xx.
-- Incorporar autenticación si se procesan datos reales.
-- No almacenar datos clínicos en logs.
+3. Para restringir inicialmente el servicio a la propia VM, cambiar los mapeos ports de docker-compose.yml por los siguientes valores. No modificar los puertos internos de los contenedores.
 
-## 8. Validación posterior
+# backend > ports
+- "127.0.0.1:8000:8000"
+# frontend > ports
+- "127.0.0.1:8080:80"
 
-```bash
-curl https://URL_BACKEND/health
-curl https://URL_BACKEND/model-info
-```
+4. Construir, iniciar y comprobar los servicios desde la carpeta del proyecto. Ante un error, consultar los logs antes de continuar.
 
-Abrir el frontend y enviar el caso de ejemplo. Confirmar respuesta HTTP 200, diagnóstico, probabilidades, versión del modelo y latencia.
+docker compose config --quiet
+docker compose up -d --build --wait --wait-timeout 180
+docker compose ps
+docker compose exec -T backend python -m pytest -q
+docker compose exec -T backend python tests/comprobar_integracion.py
+curl --fail http://127.0.0.1:8080/api/health
+
+5. Para una demostración privada, crear un túnel desde la computadora del operador. Sustituir USUARIO e IP_VM por los valores reales; si el puerto local 8080 está ocupado, elegir otro en el lado izquierdo.
+
+ssh -L 8080:127.0.0.1:8080 USUARIO@IP_VM
+
+Con el túnel abierto, acceder a http://localhost:8080. Para publicación pública, configurar un dominio y un proxy de entrada con HTTPS hacia 127.0.0.1:8080. Mantener 8000 y 8080 cerrados en el firewall externo; abrir 443 y, si el mecanismo de certificados lo requiere, 80. Validar la URL HTTPS antes de compartirla.
+
+## Operación y evidencia de funcionamiento
+
+## Comprobaciones y recuperación
+
+docker compose logs --tail=80
+docker compose restart
+docker compose down
+
+Para actualizar, conservar la revisión anterior, obtener la revisión deseada, reconstruir con docker compose up -d --build --wait y repetir las comprobaciones. Para volver atrás, seleccionar el commit anterior y reconstruir. Cambiar FRONTEND_PORT o BACKEND_PORT en .env cuando haya conflicto de puertos en ejecución local.
+
+La API no implementa cuentas, contraseñas, sesiones ni tokens. CORS no sustituye autenticación. El servicio público necesita control de acceso si se exige restringir usuarios. No registrar datos clínicos reales; este sistema es académico. La carga de joblib debe limitarse a artefactos confiables del proyecto.
+
+La configuración Nginx incluida resuelve el nombre backend de Docker Compose. Publicar frontend y backend como servicios independientes exige modificar el proxy o retirar su dependencia de ese nombre; cambiar solamente API_URL en JavaScript no resuelve el arranque de Nginx.
+
+## Resultado local observado
+
+Captura aportada de la ejecución en Windows con Docker Desktop: nueve pruebas aprobadas, integración correcta y ambos contenedores saludables. Se observó una advertencia de deprecación de AnyIO que no causó fallos. Esta evidencia no acredita despliegue en nube.
+
+Fuentes del proyecto: README.md, INICIAR_DOCKER.bat, docker-compose.yml, backend/app/main.py, frontend/nginx.conf y docs/AUTENTICACION.md. Código revisado: d883fb7e5eaa43768caa57a5eae352c31743bd06.
+
+Evidencias integradas en las versiones Word y PDF de la raíz del repositorio.

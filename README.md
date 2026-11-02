@@ -65,7 +65,7 @@ La codificación es **0 maligno y 1 benigno**. Precision, recall y F1 se calcula
 - [Relación con el chatbot generativo](docs/RELACION_CHATBOT.md).
 - [Uso de herramientas de documentación](docs/USO_COPILOT_Y_DOCUMENTACION.md).
 
-Los Word y PDF de la raíz conservan la entrega histórica. Para la revisión actual prevalecen los archivos Markdown y metadatos versionados; esos documentos históricos no se han reeditado.
+Los manuales Word y PDF de la raíz están actualizados al modelo 1.2.0 e incorporan evidencia de ejecución local en Docker con nueve pruebas aprobadas. La documentación distingue esa ejecución comprobada del procedimiento de despliegue en nube, aún no acreditado.
 
 Las pruebas de API no demuestran validez clínica. La construcción de una imagen tampoco demuestra una ejecución local o un despliegue en nube: conservar las salidas reales del entorno utilizado. No se ha implementado aquí el chatbot generativo.
 

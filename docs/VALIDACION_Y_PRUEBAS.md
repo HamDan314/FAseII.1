@@ -1,62 +1,132 @@
-# Documento de validación y pruebas
+# Validación y pruebas del clasificador de tumores
 
-## Alcance
+Clasificador de tumores · Fase II · Modelo 1.2.0
+Actualización del 1 de noviembre de 2026
 
-Validar la carga del modelo, contrato de API, integración frontend-backend y comportamiento ante entradas inválidas.
+La versión 1.2.0 se ejecutó correctamente en Docker en el equipo del usuario. Las capturas aportadas muestran nueve pruebas aprobadas, ambos contenedores saludables y una respuesta de predicción desde localhost:8080. Este documento distingue las pruebas de software, la evaluación del modelo y los casos todavía no acreditados por ejecución.
 
-## Entorno de despliegue
+## Entorno y alcance
 
-- Python 3.11
-- FastAPI
-- scikit-learn 1.8.0 (misma versión usada para serializar el modelo)
-- Entrenamiento y pruebas de esta revisión: Python 3.12.14; Docker y CI usan Python 3.11.
-- Pruebas automatizadas con pytest
-- Contenedores Linux basados en imágenes oficiales Python slim y Nginx Alpine
+El backend se construye desde Python 3.11 slim y utiliza FastAPI 0.115.12, scikit-learn 1.8.0, pandas 2.2.3, joblib 1.4.2 y pytest 8.3.5. El frontend usa Nginx. La ejecución documentada se realizó con Docker Desktop en Windows. El entrenamiento registrado en metadata corresponde a Python 3.12.14.
 
-## Casos funcionales
+## Pruebas automatizadas ejecutadas
 
-| ID | Caso | Entrada | Resultado esperado |
-|---|---|---|---|
-| CP-01 | Salud | GET `/health` | HTTP 200 y modelo cargado |
-| CP-02 | Predicción válida | 30 números | HTTP 200, clase y probabilidades |
-| CP-03 | Información | GET `/model-info` | Variables, versión y métricas |
-| CP-04 | Integración web | Formulario → API | Resultado mostrado en pantalla |
-| CP-05 | Proxy de integración | GET `/api/health` en puerto 8080 | HTTP 200 reenviado al backend |
+| Prueba | Comprobación |
 
-## Casos extremos
+| --- | --- |
 
-| ID | Caso | Resultado esperado |
-|---|---|---|
-| CE-01 | Menos de 30 variables | HTTP 422 |
-| CE-02 | Más de 30 variables | HTTP 422 |
-| CE-03 | Valores no numéricos | HTTP 422 |
-| CE-04 | NaN o infinito | HTTP 422 |
-| CE-05 | Modelo ausente | El contenedor no inicia o responde 503 |
-| CE-06 | Campo inesperado | HTTP 422 |
+| test_health | HTTP 200 y modelo cargado |
 
-## Evaluación del modelo y alcance de las métricas
+| test_root_and_model_info | Raíz e información de 30 variables |
 
-El entrenamiento realiza una partición estratificada 80/20, semilla 42. La imputación y el escalado se ajustan dentro de cada fold del pipeline. El algoritmo ganador se fija por F1 promedio de validación cruzada de cinco pliegues antes de observar métricas de prueba. La prueba histórica ya había sido utilizada para comparar modelos; una validación externa adicional requiere una nueva muestra.
+| test_valid_prediction | Clase válida y probabilidades coherentes |
 
-Los valores vigentes, matriz y trazabilidad están en `backend/model/metadata.json` y en [Trazabilidad](TRAZABILIDAD.md). La exportación del modelo y sus métricas se realiza en una misma ejecución. No se ha optimizado un umbral; se utiliza el predeterminado de 0.50 para benigno.
+| test_missing_features | Rechazo 422 con dos características |
 
-La clase positiva es **benigno (1)**, y la clase 0 es maligno. Por tanto:
+| test_non_numeric_value | Rechazo 422 de valores no numéricos |
 
-- Falso positivo de benignidad: maligno clasificado como benigno, con posible retraso de evaluación si se usara fuera del ámbito académico.
-- Falso negativo de benignidad: benigno clasificado como maligno, con posibles revisiones adicionales, ansiedad y costo.
-- Recall de benignos: proporción de benignos detectados. No equivale a sensibilidad para malignidad.
+| test_extra_features | Rechazo 422 con 31 características |
 
-No se asignan costos clínicos inventados ni se traslada la ponderación 5:1 del ejercicio crediticio. Cualquier regla operativa requiere responsables clínicos, datos independientes y revisión humana.
+| test_missing_body_and_unexpected_field | Rechazo 422 sin cuerpo o con campo adicional |
 
-## Criterios de aceptación
+| test_artifact_hash_and_positive_class | Hash del modelo y mapeo de clases |
 
-1. Todos los tests automatizados deben aprobar.
-2. `/health` reporta `model_loaded: true`.
-3. Una solicitud correcta devuelve probabilidades entre 0 y 1.
-4. Entradas con cardinalidad incorrecta son rechazadas.
-5. El frontend consume `/api/predict`, reenviado a `/predict`.
-6. El hash del modelo coincide con metadata y sus métricas se reproducen en la partición documentada.
+| test_deployed_metrics_match_documented_split | Métricas y matriz de la partición registrada |
+
+Resultado mostrado en la ejecución dentro del contenedor: 9 passed, 1 warning in 1.52s. La advertencia se refiere a una API obsoleta de AnyIO usada por TestClient; no representa una prueba fallida.
+
+## Integración y evidencias de ejecución
+
+El script comprobar_integracion.py informó éxito para web, proxy Nginx, salud, metadatos, predicción y rechazo HTTP 422. docker compose ps mostró cancer-api y cancer-frontend en estado healthy, publicados en los puertos 8000 y 8080.
+
+Figura 1. Resultado de INICIAR_DOCKER.bat en el equipo del usuario, aportado el 1 de noviembre de 2026.
+
+Figura 2. Interfaz en localhost:8080 con resultado del caso de ejemplo. Se recorta la captura para concentrar la evidencia en la predicción.
+
+Respuesta observada: prediction 0, diagnosis maligno, probability_malignant 0.999968, probability_benign 0.000032 y model_version 1.2.0. La latencia de esta captura fue 11.194 ms; es una observación individual, no una medición de rendimiento bajo carga.
+
+## Evaluación del modelo y trazabilidad
+
+El dataset Breast Cancer Wisconsin Diagnostic contiene 569 registros y 30 características. Se divide de forma estratificada en 455 ejemplos de entrenamiento y 114 de prueba, con semilla 42. La imputación y el escalado se ajustan dentro del pipeline de cada fold. La selección utiliza F1 promedio de validación cruzada de cinco pliegues antes de evaluar la prueba en el procedimiento vigente.
+
+| Indicador | Valor |
+
+| --- | --- |
+
+| Modelo | Regresión logística |
+
+| Accuracy | 0.982456 |
+
+| Precision de benignos | 0.986111 |
+
+| Recall de benignos | 0.986111 |
+
+| F1 de benignos | 0.986111 |
+
+| ROC AUC con benigno positivo | 0.996032 |
+
+| F1 promedio de validación cruzada | 0.986056 |
+
+| Desviación del F1 de validación cruzada | 0.004287 |
+
+La clase positiva es benigno (1); maligno corresponde a 0. La matriz usa filas reales y columnas predichas, en orden maligno y benigno.
+
+| Clase real | Predicho maligno | Predicho benigno |
+
+| --- | --- | --- |
+
+| Maligno | 41 | 1 |
+
+| Benigno | 1 | 71 |
+
+Un falso positivo de benignidad es un maligno clasificado como benigno. Un falso negativo de benignidad es un benigno clasificado como maligno. El recall de benignos no equivale a sensibilidad para malignidad; esta última es 41/42, aproximadamente 97.62 % en esta muestra.
+
+Se mantiene predict() con el umbral predeterminado de 0.50 para benigno; no se optimizó el umbral. La prueba histórica ya había sido consultada en versiones anteriores. Corregir el procedimiento no convierte esta muestra en una evaluación externa inédita.
+
+MLflow run: 813d7c9b85614044bf7d75dd2581c632
+
+SHA 256 del modelo desplegado:
+
+f7ce8136c5ccc012cce5471f54957033
+316514f0a514d961a85a6339b6bf99c1
+
+## Criterios de aceptación y límites
+
+| Criterio | Estado |
+
+| --- | --- |
+
+| Contenedores saludables | Comprobado en captura |
+
+| Nueve pruebas del backend | Aprobadas dentro del contenedor |
+
+| Predicción y proxy Nginx | Comprobados por script e interfaz |
+
+| Entradas de longitud incorrecta y campos extra | Rechazo 422 comprobado por pytest |
+
+| Hash y métricas del artefacto | Comprobados por pytest |
+
+| Despliegue real en nube | No acreditado; se proporciona manual |
+
+| Pruebas de carga y autenticación | No realizadas; no se implementa login |
+
+## Casos adicionales propuestos
+
+El código rechaza NaN e infinito y falla durante el arranque si faltan el modelo o metadata. Estos escenarios no aparecen como casos específicos ejecutados en las nueve pruebas actuales. Para acreditarlos, añadir pruebas que envíen valores no finitos mediante JSON admisible y que simulen la ausencia del artefacto en un entorno aislado. No se consideran aprobados por la sola existencia de validaciones en el código.
+
+## Reproducción
+
+docker compose up -d --build --wait --wait-timeout 180
+docker compose exec -T backend python -m pytest -q
+docker compose exec -T backend python tests/comprobar_integracion.py
+docker compose ps
+
+En Windows puede utilizarse INICIAR_DOCKER.bat para ejecutar esa secuencia y consultar logs ante fallos. Abrir localhost:8080, cargar el ejemplo y realizar la predicción para comprobar la interfaz.
 
 ## Conclusión
 
-La solución separa presentación, inferencia y artefacto de ML. Docker facilita su traslado entre entornos. Las pruebas funcionales verifican el servicio y la coherencia del artefacto, no su validez clínica ni el funcionamiento del futuro chatbot. Véase [relación con el chatbot](RELACION_CHATBOT.md).
+Se cumplen los criterios de funcionamiento local de Docker y de integración del prototipo observado. Las pruebas verifican software y coherencia del artefacto; no demuestran validez clínica, generalización externa ni funcionamiento de un chatbot. El repositorio no implementa el chatbot generativo ni autenticación de usuarios.
+
+Fuentes: backend/tests/test_api.py, backend/tests/comprobar_integracion.py, backend/model/metadata.json, entrenamiento/fuentes/train.py y capturas aportadas. Código de referencia: d883fb7e5eaa43768caa57a5eae352c31743bd06.
+
+Evidencias integradas en las versiones Word y PDF de la raíz del repositorio.

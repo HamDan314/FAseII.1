@@ -35,3 +35,8 @@ La prueba ya había sido inspeccionada en la entrega histórica. Esta revisión 
 ## Verificaciones
 
 Nueve pruebas de API y coherencia del modelo aprobadas en Python 3.12.14. Docker no está disponible en el entorno de esta revisión local: la ejecución de contenedores debe verificarse con `INICIAR_DOCKER.bat` o en el workflow de GitHub Actions. Se corrigió la exclusión de `tests/` del contexto de construcción y se añadió una comprobación del proxy y predicción entre contenedores. No se afirma un despliegue real en nube.
+
+
+## Evidencia posterior de Docker
+
+El 1 de noviembre de 2026 el usuario aportó capturas de INICIAR_DOCKER.bat con nueve pruebas aprobadas dentro del contenedor, integración correcta y ambos servicios saludables. También mostró la predicción en localhost:8080 con el modelo 1.2.0. Esta evidencia posterior completa la verificación local mencionada arriba; no acredita una publicación en nube. Véanse los documentos Word y PDF actualizados de la raíz.
